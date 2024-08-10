@@ -44,20 +44,23 @@
         color: #0078d7;
         font-weight: bold;
       }
+
+      #copyButton {
+        margin-top: 10px;
+        padding: 5px 10px;
+        background-color: #0078d7;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
     </style>
   </head>
   <body>
     <div id="gigDataContainer">
       <!-- Gig data will be displayed here -->
-      <div><strong>Gig Name:</strong> <span id="gigName"></span></div>
-      <div><strong>Gig Date:</strong> <span id="gigDate"></span></div>
-      <div><strong>Gig Start Date:</strong> <span id="gigStartDate"></span></div>
-      <div><strong>Gig URL:</strong> <span id="gigUrl"></span></div>
-      <div><strong>Timestamp:</strong> <span id="gigTimestamp"></span></div>
-      <div><strong>Acts:</strong> <span id="gigActs"></span></div>
-      <div><strong>Internal Description:</strong> <span id="internalDescription"></span></div> <!-- Added Internal Description -->
     </div>
     <div id="meta"></div>
+    <button id="copyButton">Copy</button>
     <script src="popup.js"></script>
   </body>
 </html>
