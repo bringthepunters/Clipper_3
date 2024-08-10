@@ -1,0 +1,56 @@
+{
+  "name": "LML Extension",
+  "description": "Chrome Extension",
+  "version": "1.2",
+  "manifest_version": 3,
+  "icons": {
+    "48": "LML_1_RGB.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": ["scripting", "storage", "activeTab", "contextMenus", "tabs"],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://*.google.com/*"],
+      "js": ["content.js"]
+    }
+  ],
+  "commands": {
+    "add-new-gig": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+G"
+      },
+      "description": "Add a new gig"
+    },
+    "add-act": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+A"
+      },
+      "description": "Add an act"
+    },
+    "set-date": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+D"
+      },
+      "description": "Set date"
+    },
+    "set-time": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+T"
+      },
+      "description": "Set time"
+    },
+    "set-venue": {
+      "description": "Set venue"
+    },
+    "add-price": {
+      "description": "Add price"
+    },
+    "grab-known-style-1": { "description": "Grab known style event data 1" },
+    "grab-known-style-2": { "description": "Grab known style event data 2 " }
+  }
+}

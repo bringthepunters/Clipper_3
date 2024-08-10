@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Extension Popup</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 15px;
+        background-color: #ffffff; /* White background */
+      }
+
+      #gigDataContainer {
+        padding: 10px;
+        margin-bottom: 10px;
+        border: 2px black solid;
+      }
+
+      strong {
+        font-weight: bold;
+        display: inline; /* Ensures no additional lines are added */
+      }
+
+      h3 {
+        margin-top: 0; /* Removes margin above */
+        margin-bottom: 10px; /* Provides some space below the header */
+      }
+
+      div,
+      li {
+        font-size: 16px;
+        color: #444;
+        line-height: 1.6;
+      }
+
+      ul {
+        list-style-type: none;
+        padding: 0;
+        margin-top: 0; /* Removes extra margin above the list */
+      }
+
+      li:before {
+        content: "• ";
+        color: #0078d7;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="gigDataContainer">
+      <!-- Gig data will be displayed here -->
+      <div><strong>Gig Name:</strong> <span id="gigName"></span></div>
+      <div><strong>Gig Date:</strong> <span id="gigDate"></span></div>
+      <div><strong>Gig Start Date:</strong> <span id="gigStartDate"></span></div>
+      <div><strong>Gig URL:</strong> <span id="gigUrl"></span></div>
+      <div><strong>Timestamp:</strong> <span id="gigTimestamp"></span></div>
+      <div><strong>Acts:</strong> <span id="gigActs"></span></div>
+      <div><strong>Internal Description:</strong> <span id="internalDescription"></span></div> <!-- Added Internal Description -->
+    </div>
+    <div id="meta"></div>
+    <script src="popup.js"></script>
+  </body>
+</html>
