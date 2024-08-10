@@ -31,6 +31,7 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
+
 // This function creates a div element for each gig detail and appends it to the container
 function addData(label, data) {
   if (data) {
