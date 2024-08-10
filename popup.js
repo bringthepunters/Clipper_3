@@ -32,24 +32,37 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
-function showTemporaryMessage(message, isError = false) {
-  const messageDiv = document.createElement("div");
-  messageDiv.textContent = message;
-  messageDiv.style.position = "fixed";
-  messageDiv.style.bottom = "20px";
-  messageDiv.style.left = "50%";
-  messageDiv.style.transform = "translateX(-50%)";
-  messageDiv.style.backgroundColor = isError ? "red" : "green";
-  messageDiv.style.color = "white";
-  messageDiv.style.padding = "10px 20px";
-  messageDiv.style.borderRadius = "5px";
-  messageDiv.style.zIndex = "1000";
-  document.body.appendChild(messageDiv);
+function showTagAddedNotification() {
+    const notificationDiv = document.createElement("div");
+    notificationDiv.textContent = "Genre tags added successfully!";
+    notificationDiv.style.position = "fixed";
+    notificationDiv.style.bottom = "20px";
+    notificationDiv.style.right = "20px";
+    notificationDiv.style.backgroundColor = "#4CAF50"; // Green background for success
+    notificationDiv.style.color = "white";
+    notificationDiv.style.padding = "10px 20px";
+    notificationDiv.style.borderRadius = "5px";
+    notificationDiv.style.boxShadow = "0 2px 10px rgba(0, 0, 0, 0.2)";
+    notificationDiv.style.zIndex = "1000";
+    notificationDiv.style.opacity = "0";
+    notificationDiv.style.transition = "opacity 0.5s";
 
-  setTimeout(() => {
-      messageDiv.remove();
-  }, 2000); // Message disappears after 2 seconds
+    document.body.appendChild(notificationDiv);
+
+    // Fade in the notification
+    setTimeout(() => {
+        notificationDiv.style.opacity = "1";
+    }, 100); // Slight delay for a smooth fade-in effect
+
+    // Automatically remove the notification after 3 seconds with fade out
+    setTimeout(() => {
+        notificationDiv.style.opacity = "0";
+        setTimeout(() => {
+            notificationDiv.remove();
+        }, 500); // Wait for the fade-out to complete before removing
+    }, 3000);
 }
+
 
 function displayGigData(gigData) {
     const container = document.getElementById("gigDataContainer");

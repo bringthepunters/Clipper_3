@@ -267,14 +267,25 @@ function showTagAddedNotification() {
     notificationDiv.style.borderRadius = "5px";
     notificationDiv.style.boxShadow = "0 2px 10px rgba(0, 0, 0, 0.2)";
     notificationDiv.style.zIndex = "1000";
+    notificationDiv.style.opacity = "0";
+    notificationDiv.style.transition = "opacity 0.5s";
 
     document.body.appendChild(notificationDiv);
 
-    // Automatically remove the notification after 3 seconds
+    // Fade in the notification
     setTimeout(() => {
-        notificationDiv.remove();
+        notificationDiv.style.opacity = "1";
+    }, 100); // Slight delay for a smooth fade-in effect
+
+    // Automatically remove the notification after 3 seconds with fade out
+    setTimeout(() => {
+        notificationDiv.style.opacity = "0";
+        setTimeout(() => {
+            notificationDiv.remove();
+        }, 500); // Wait for the fade-out to complete before removing
     }, 3000);
 }
+
 
 
 function grabKnownStyle2(text, tab) {
@@ -374,13 +385,34 @@ chrome.commands.onCommand.addListener(function (command) {
 });
 
 function showTagAddedNotification() {
-    chrome.notifications.create({
-        type: "basic",
-        iconUrl: "LML_1_RGB.png", // Adjust the icon path if necessary
-        title: "Genre Tags Added",
-        message: "The genre tags have been successfully added to the gig.",
-        priority: 1,
-    });
+    const notificationDiv = document.createElement("div");
+    notificationDiv.textContent = "Genre tags added successfully!";
+    notificationDiv.style.position = "fixed";
+    notificationDiv.style.bottom = "20px";
+    notificationDiv.style.right = "20px";
+    notificationDiv.style.backgroundColor = "#4CAF50"; // Green background for success
+    notificationDiv.style.color = "white";
+    notificationDiv.style.padding = "10px 20px";
+    notificationDiv.style.borderRadius = "5px";
+    notificationDiv.style.boxShadow = "0 2px 10px rgba(0, 0, 0, 0.2)";
+    notificationDiv.style.zIndex = "1000";
+    notificationDiv.style.opacity = "0";
+    notificationDiv.style.transition = "opacity 0.5s";
+
+    document.body.appendChild(notificationDiv);
+
+    // Fade in the notification
+    setTimeout(() => {
+        notificationDiv.style.opacity = "1";
+    }, 100); // Slight delay for a smooth fade-in effect
+
+    // Automatically remove the notification after 3 seconds with fade out
+    setTimeout(() => {
+        notificationDiv.style.opacity = "0";
+        setTimeout(() => {
+            notificationDiv.remove();
+        }, 500); // Wait for the fade-out to complete before removing
+    }, 3000);
 }
 
 function getAPIKey(callback) {
