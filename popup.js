@@ -52,31 +52,37 @@ function showTemporaryMessage(message, isError = false) {
 }
 
 function displayGigData(gigData) {
-  const container = document.getElementById("gigDataContainer");
-  container.innerHTML = ""; // Clear previous content
-
-  addData("Gig Name", gigData.gigName);
-  addData("Gig Start Time", gigData.gigStartTime);
-  addData("Gig Date", gigData.gigStartDate);
-  addData("Gig Start Date", gigData.gigStartDate);
-  addData("Gig URL", gigData.gigUrl);
-  addData("Timestamp", gigData.gigTimestamp);
-  addData("Internal Description", gigData.internalDescription);
-
-  if (gigData.acts && gigData.acts.length > 0) {
-      addData("Acts", gigData.acts.join(" | "));
+    const container = document.getElementById("gigDataContainer");
+    container.innerHTML = ""; // Clear previous content
+  
+    addData("Gig Name", gigData.gigName);
+    addData("Gig Start Time", gigData.gigStartTime);
+    addData("Gig Date", gigData.gigStartDate);
+    addData("Gig Start Date", gigData.gigStartDate);
+    addData("Gig URL", gigData.gigUrl);
+    addData("Timestamp", gigData.gigTimestamp);
+    addData("Internal Description", gigData.internalDescription);
+  
+    if (gigData.acts && gigData.acts.length > 0) {
+        addData("Acts", gigData.acts.join(" | "));
+    }
+  
+    if (gigData.prices && gigData.prices.length > 0) {
+        addData("Prices", gigData.prices.join(" | "));
+    }
+  
+    if (gigData.genretags && gigData.genretags.length > 0) {
+        gigData.genretags.forEach(tag => {
+            const div = document.createElement("div");
+            div.textContent = tag;
+            container.appendChild(div);
+        });
+    } else {
+        console.log("No genre tags found in gigData."); // Debug log
+    }
   }
+     
 
-  if (gigData.prices && gigData.prices.length > 0) {
-      addData("Prices", gigData.prices.join(" | "));
-  }
-
-  if (gigData.genretags && gigData.genretags.length > 0) {
-      addData("Genre Tags", gigData.genretags.join("\n")); // Ensures tags are on separate lines
-  } else {
-      console.log("No genre tags found in gigData."); // Debug log
-  }
-}
 
 function addData(label, data) {
   if (data) {
