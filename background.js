@@ -9,60 +9,69 @@ let currentGig = {
   internalDescription: null,
 };
 
+// Define the getAPIKey function
+function getAPIKey(callback) {
+  chrome.storage.local.get(['apiKey'], function(result) {
+      if (result.apiKey) {
+          callback(result.apiKey);
+      } else {
+          console.error("API key not found");
+      }
+  });
+}
+
 let isUpdatingMenu = false;
 
-// Define the saveCurrentGig function here
 function saveCurrentGig() {
   chrome.storage.local.set({ currentGig: currentGig }, function () {
-    console.log("currentGig data saved to storage");
+      console.log("currentGig data saved to storage:", currentGig);
   });
 }
 
 function createMenuItem(id, title) {
   chrome.contextMenus.create({
-    id: id,
-    title: title,
-    contexts: ["selection"],
+      id: id,
+      title: title,
+      contexts: ["selection"],
   });
 }
 
-// Function to update context menu
 function updateContextMenu() {
   if (isUpdatingMenu) {
-    console.log("Update already in progress, skipping...");
-    return;
+      console.log("Update already in progress, skipping...");
+      return;
   }
 
   isUpdatingMenu = true;
 
   chrome.contextMenus.removeAll(() => {
-    createMenuItem("newGig", 'Add new gig: "%s"');
-    if (!currentGig.gigStartTime) {
-      createMenuItem("gigStartTime", "Set Gig Start Time");
-    }
-    if (!currentGig.gigStartDate) {
-      createMenuItem("gigStartDate", "Set Gig Start Date");
-    }
-    const actMenuItemTitle =
-      currentGig.acts.length === 0 ? "Add a headline act" : "Add another act";
-    createMenuItem("addAct", actMenuItemTitle);
-    createMenuItem("addPrice", "Add new price");
-    createMenuItem("addDescription", "Add Internal Description");
+      createMenuItem("newGig", 'Add new gig: "%s"');
+      if (!currentGig.gigStartTime) {
+          createMenuItem("gigStartTime", "Set Gig Start Time");
+      }
+      if (!currentGig.gigStartDate) {
+          createMenuItem("gigStartDate", "Set Gig Start Date");
+      }
+      const actMenuItemTitle =
+          currentGig.acts.length === 0 ? "Add a headline act" : "Add another act";
+      createMenuItem("addAct", actMenuItemTitle);
+      createMenuItem("addPrice", "Add new price");
+      createMenuItem("addDescription", "Add Internal Description");
 
-    isUpdatingMenu = false;
+      isUpdatingMenu = false;
   });
 }
 
 function resetGig(name, tab) {
   currentGig = {
-    gigName: name,
-    gigUrl: tab.url,
-    gigTimestamp: new Date().toISOString(),
-    gigStartTime: null,
-    gigStartDate: null,
-    acts: [],
-    prices: [],
-    internalDescription: null,
+      gigName: name,
+      gigUrl: tab.url,
+      gigTimestamp: new Date().toISOString(),
+      gigStartTime: null,
+      gigStartDate: null,
+      acts: [],
+      prices: [],
+      internalDescription: null,
   };
 
   console.log("Gig name set:", name);
@@ -74,19 +83,18 @@ function resetGig(name, tab) {
   updateContextMenu();
 }
 
-// Function to handle setting gig details and resetting data for a new gig
 function setGigDetails(menuItemId, detail) {
   if (menuItemId === "newGig") {
-    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-      resetGig(detail, tabs[0]);
-    });
+      chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+          resetGig(detail, tabs[0]);
+      });
   } else {
-    currentGig[menuItemId] = detail;
-    console.log(`${menuItemId} set:`, detail);
-    console.log("Current Gig Data:", currentGig);
+      currentGig[menuItemId] = detail;
+      console.log(`${menuItemId} set:`, detail);
+      console.log("Current Gig Data:", currentGig);
 
-    saveCurrentGig();
-    updateContextMenu();
+      saveCurrentGig();
+      updateContextMenu();
   }
 }
 
@@ -115,34 +123,90 @@ function grabKnownStyle1(text, tab) {
 
   setGigDetails("gigStartDate", date);
   if (start) {
-    setGigDetails("gigStartTime", start);
+      setGigDetails("gigStartTime", start);
   }
 
   addPrice(ticket?.split("$")[1]);
 }
 
+function sendToChatGPT(internalDescription, callback) {
+  const gig_gist_prompt = `
+  Given the gig description provided, generate a list of two tags that describe music genres mentioned or implied. One of the tags should come from the list below.
+
+  Format output like this:
+  genre tag 1
+  genre tag 2
+
+  Rock
+  Jazz
+  Country
+  Roots
+  Acoustic
+  Classical
+  Latin
+  HipHop
+  African
+  Folk
+  DJ
+  `;
+
+  const message = gig_gist_prompt + "\n\n" + internalDescription;
+
+  console.log("Sending message to GPT-3:", message); // Debug log
+
+  getAPIKey(function(apiKey) {
+      fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+              model: "gpt-3.5-turbo",
+              messages: [{ role: "user", content: message }],
+              max_tokens: 20,
+          }),
+      })
+      .then(response => response.json())
+      .then(data => {
+          console.log("GPT-3 Response:", data); // Debug log
+          const tags = data.choices[0].message.content.trim().split("\n");
+          console.log("Parsed Tags:", tags); // Debug log
+          callback(tags);
+      })
+      .catch(error => console.error("Error with ChatGPT API:", error));
+  });
+}
+
 function grabKnownStyle2(text, tab) {
   if (text) {
-    const { offers, url, name, startDate } = JSON.parse(text)["@graph"][1];
-    const [startDateActual, time] = startDate.split("T");
-    resetGig(name, { url });
-    setGigDetails("gigStartDate", startDateActual);
-    setGigDetails("gigStartTime", time);
-    offers.forEach((x) => addPrice(x.price));
+      const { offers, url, name, startDate } = JSON.parse(text)["@graph"][1];
+      const [startDateActual, time] = startDate.split("T");
+      resetGig(name, { url });
+      setGigDetails("gigStartDate", startDateActual);
+      setGigDetails("gigStartTime", time);
+      offers.forEach((x) => addPrice(x.price));
   }
 }
 
-// Listener for when a context menu item is clicked
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === "addAct") {
-    addAct(info.selectionText);
+      addAct(info.selectionText);
   } else if (info.menuItemId === "addPrice") {
-    addPrice(info.selectionText);
+      addPrice(info.selectionText);
   } else if (info.menuItemId === "addDescription") {
-    const description = info.selectionText.substring(0, 500);
-    setGigDetails("internalDescription", description);
+      let description = info.selectionText.substring(0, 500);
+      description = description.replace(/(\r\n|\n|\r)/gm, " "); // Replace all line breaks with a space
+
+      setGigDetails("internalDescription", description);
+
+      sendToChatGPT(description, (tags) => {
+          currentGig.genretags = tags;
+          saveCurrentGig();
+          updateContextMenu(); // Update context menu to reflect new tags if necessary
+      });
   } else {
-    setGigDetails(info.menuItemId, info.selectionText);
+      setGigDetails(info.menuItemId, info.selectionText);
   }
 });
 
@@ -161,29 +225,29 @@ function querySelector(query) {
 
 function applyWithQuerySelector(selector, callback) {
   chrome.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
-    chrome.scripting
-      .executeScript({
-        target: { tabId: tabs[0].id },
-        func: querySelector,
-        args: [selector],
-      })
-      .then((results) => {
-        callback(results[0].result, tabs[0]);
-      });
+      chrome.scripting
+          .executeScript({
+              target: { tabId: tabs[0].id },
+              func: querySelector,
+              args: [selector],
+          })
+          .then((results) => {
+              callback(results[0].result, tabs[0]);
+          });
   });
 }
 
 function applyWithSelection(callback) {
   chrome.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
-    chrome.scripting
-      .executeScript({
-        target: { tabId: tabs[0].id },
-        func: getSelectedContent,
-        args: [],
-      })
-      .then((results) => {
-        callback(results[0].result, tabs[0]);
-      });
+      chrome.scripting
+          .executeScript({
+              target: { tabId: tabs[0].id },
+              func: getSelectedContent,
+              args: [],
+          })
+          .then((results) => {
+              callback(results[0].result, tabs[0]);
+          });
   });
 }
 
@@ -191,21 +255,21 @@ function applyWithSelection(callback) {
 chrome.commands.onCommand.addListener(function (command) {
   console.log(command);
   if (command === "add-new-gig") {
-    applyWithSelection(resetGig);
+      applyWithSelection(resetGig);
   } else if (command === "add-act") {
-    applyWithSelection(addAct);
+      applyWithSelection(addAct);
   } else if (command === "add-price") {
-    applyWithSelection(addPrice);
+      applyWithSelection(addPrice);
   } else if (command === "set-date") {
-    applyWithSelection((text) => setGigDetails("gigStartDate", text));
+      applyWithSelection((text) => setGigDetails("gigStartDate", text));
   } else if (command === "set-time") {
-    applyWithSelection((text) => setGigDetails("gigStartTime", text));
+      applyWithSelection((text) => setGigDetails("gigStartTime", text));
   } else if (command === "grab-known-style-1") {
-    applyWithQuerySelector("[role=main]", grabKnownStyle1);
+      applyWithQuerySelector("[role=main]", grabKnownStyle1);
   } else if (command === "grab-known-style-2") {
-    applyWithQuerySelector(
-      "script[type='application/ld+json']",
-      grabKnownStyle2,
-    );
+      applyWithQuerySelector(
+          "script[type='application/ld+json']",
+          grabKnownStyle2,
+      );
   }
 });

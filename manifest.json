@@ -1,7 +1,7 @@
 {
   "name": "LML Extension",
   "description": "Chrome Extension",
-  "version": "1.2",
+  "version": "1.5",
   "manifest_version": 3,
   "icons": {
     "48": "LML_1_RGB.png"
@@ -9,7 +9,7 @@
   "background": {
     "service_worker": "background.js"
   },
-  "permissions": ["scripting", "storage", "activeTab", "contextMenus", "tabs"],
+  "permissions": ["storage", "scripting", "activeTab", "contextMenus", "tabs"],
   "action": {
     "default_popup": "popup.html"
   },
@@ -50,7 +50,21 @@
     "add-price": {
       "description": "Add price"
     },
-    "grab-known-style-1": { "description": "Grab known style event data 1" },
-    "grab-known-style-2": { "description": "Grab known style event data 2 " }
+    "grab-known-style-1": {
+      "description": "Grab known style event data 1"
+    },
+    "grab-known-style-2": {
+      "description": "Grab known style event data 2 "
+    }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["setup.html"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "options_ui": {
+    "page": "setup.html",
+    "open_in_tab": true
   }
 }
