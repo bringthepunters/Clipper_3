@@ -131,28 +131,56 @@ function grabKnownStyle1(text, tab) {
 
 function sendToChatGPT(internalDescription, callback) {
   const gig_gist_prompt = `
-  Given the gig description provided, generate a list of two tags that describe music genres mentioned or implied. One of the tags should come from the list below.
+  Given the gig description provided, generate a list of two music genre tags that describe music genres mentioned or implied. The first tag MUST be from the list below, and the second tag should be a one or two-word description that best fits the description. The second tag may be from the list but does not have to be. It can be quirky, but it should fit the description and not be negative.
 
   Format output like this:
-  genre tag 1
-  genre tag 2
+  genre: tag 1
+  genre: tag 2
 
   Rock
+  Pop
+  Hip-Hop
+  R&B and Soul
   Jazz
-  Country
-  Roots
-  Acoustic
   Classical
-  Latin
-  HipHop
-  African
+  Electronic
+  Country
+  Metal
   Folk
+  Blues
+  Reggae
+  Dub
+  Latin
+  World
+  Gospel
+  Dance
+  Punk
+  Alternative
+  Experimental
+  Indie
+  Ambient
+  Hardcore
+  Industrial
+  Garage
+  Trance
+  House
+  Techno
+  Drum and Bass
+  Dubstep
+  Funk
+  Chill
+  Disco
+  Opera
+  Swing
+  Acoustic
+  New Wave
   DJ
+  Covers
   `;
 
-  const message = gig_gist_prompt + "\n\n" + internalDescription;
+  const message = `${gig_gist_prompt}\n\nDescription: ${internalDescription}`;
 
-  console.log("Sending message to GPT-3:", message); // Debug log
+  console.log("Sending message to GPT-4o:", message); // Debug log
 
   getAPIKey(function(apiKey) {
       fetch("https://api.openai.com/v1/chat/completions", {
@@ -162,21 +190,26 @@ function sendToChatGPT(internalDescription, callback) {
               "Authorization": `Bearer ${apiKey}`,
           },
           body: JSON.stringify({
-              model: "gpt-3.5-turbo",
-              messages: [{ role: "user", content: message }],
-              max_tokens: 20,
+              model: "gpt-4o",
+              messages: [
+                  { role: "system", content: "You are a helpful assistant with an interest in live music performances." },
+                  { role: "user", content: message }
+              ],
+              response_format: { "type": "text" },
+              max_tokens: 50,
           }),
       })
       .then(response => response.json())
       .then(data => {
-          console.log("GPT-3 Response:", data); // Debug log
+          console.log("GPT-4o Response:", data); // Debug log
           const tags = data.choices[0].message.content.trim().split("\n");
           console.log("Parsed Tags:", tags); // Debug log
           callback(tags);
       })
-      .catch(error => console.error("Error with ChatGPT API:", error));
+      .catch(error => console.error("Error with GPT-4o API:", error));
   });
 }
+
 
 function grabKnownStyle2(text, tab) {
   if (text) {
