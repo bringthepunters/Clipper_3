@@ -1,15 +1,15 @@
 let currentGig = {
-  venueName: null,
+  gigName: null,
   gigStartTime: null,
   gigStartDate: null,
   acts: [],
   prices: [],
   gigUrl: null,
   gigTimestamp: null,
-  internalDescription: null, // Added internalDescription
+  internalDescription: null,
 };
 
-let isUpdatingMenu = false; // Track if the updateContextMenu function is already running
+let isUpdatingMenu = false;
 
 // Define the saveCurrentGig function here
 function saveCurrentGig() {
@@ -30,47 +30,39 @@ function createMenuItem(id, title) {
 function updateContextMenu() {
   if (isUpdatingMenu) {
     console.log("Update already in progress, skipping...");
-    return; // Skip if an update is already in progress
+    return;
   }
 
-  isUpdatingMenu = true; // Set the flag to indicate the update is starting
+  isUpdatingMenu = true;
 
   chrome.contextMenus.removeAll(() => {
-    // Always create the "Add new gig" option
     createMenuItem("newGig", 'Add new gig: "%s"');
-    // Create other options based on the currentGig state
-    if (!currentGig.venueName) {
-      createMenuItem("venueName", "Set Venue Name");
-    }
     if (!currentGig.gigStartTime) {
       createMenuItem("gigStartTime", "Set Gig Start Time");
     }
     if (!currentGig.gigStartDate) {
       createMenuItem("gigStartDate", "Set Gig Start Date");
     }
-    // Option to add acts
     const actMenuItemTitle =
       currentGig.acts.length === 0 ? "Add a headline act" : "Add another act";
     createMenuItem("addAct", actMenuItemTitle);
     createMenuItem("addPrice", "Add new price");
-    createMenuItem("addDescription", "Add Internal Description"); // Added menu item for internal description
+    createMenuItem("addDescription", "Add Internal Description");
 
-    isUpdatingMenu = false; // Reset the flag as the update is complete
+    isUpdatingMenu = false;
   });
 }
 
 function resetGig(name, tab) {
-  // Setting the new gig details and capturing the URL and timestamp
   currentGig = {
     gigName: name,
     gigUrl: tab.url,
     gigTimestamp: new Date().toISOString(),
-    venueName: null,
     gigStartTime: null,
     gigStartDate: null,
     acts: [],
     prices: [],
-    internalDescription: null, // Reset internal description
+    internalDescription: null,
   };
 
   console.log("Gig name set:", name);
@@ -78,8 +70,8 @@ function resetGig(name, tab) {
   console.log("Gig captured at timestamp:", currentGig.gigTimestamp);
   console.log("Current Gig Data:", currentGig);
 
-  saveCurrentGig(); // Save the updated currentGig to storage
-  updateContextMenu(); // Update the context menu
+  saveCurrentGig();
+  updateContextMenu();
 }
 
 // Function to handle setting gig details and resetting data for a new gig
@@ -89,58 +81,26 @@ function setGigDetails(menuItemId, detail) {
       resetGig(detail, tabs[0]);
     });
   } else {
-    // Handling updates to gig details other than 'newGig'
     currentGig[menuItemId] = detail;
     console.log(`${menuItemId} set:`, detail);
     console.log("Current Gig Data:", currentGig);
 
-    saveCurrentGig(); // Save the updated currentGig to storage
-    updateContextMenu(); // Reflect the changes in the context menu
+    saveCurrentGig();
+    updateContextMenu();
   }
 }
 
 function addAct(actDetail) {
-  // Add the act detail to the acts array in the currentGig object
   currentGig.acts.push(actDetail);
   console.log("Act added:", actDetail);
 
-  // Save the updated currentGig object to chrome.storage.local
   saveCurrentGig();
-
-  // Optionally, update the context menu or perform other updates
   updateContextMenu();
 }
 
 function addPrice(content) {
   currentGig.prices.push(content);
   saveCurrentGig();
-}
-
-// Listener for when a context menu item is clicked
-chrome.contextMenus.onClicked.addListener((info, tab) => {
-  if (info.menuItemId === "addAct") {
-    addAct(info.selectionText);
-  } else if (info.menuItemId === "addPrice") {
-    addPrice(info.selectionText);
-  } else if (info.menuItemId === "addDescription") {
-    // Ensure the internal description does not exceed 500 characters
-    const description = info.selectionText.substring(0, 500);
-    setGigDetails("internalDescription", description);
-  } else {
-    setGigDetails(info.menuItemId, info.selectionText);
-  }
-});
-
-function setDate(text) {
-  setGigDetails("gigStartDate", text);
-}
-
-function setTime(text) {
-  setGigDetails("gigStartTime", text);
-}
-
-function setVenue(text) {
-  setGigDetails("venueName", text);
 }
 
 function grabKnownStyle1(text, tab) {
@@ -153,9 +113,9 @@ function grabKnownStyle1(text, tab) {
 
   resetGig(name, tab);
 
-  setDate(date);
+  setGigDetails("gigStartDate", date);
   if (start) {
-    setTime(start);
+    setGigDetails("gigStartTime", start);
   }
 
   addPrice(ticket?.split("$")[1]);
@@ -166,11 +126,26 @@ function grabKnownStyle2(text, tab) {
     const { offers, url, name, startDate } = JSON.parse(text)["@graph"][1];
     const [startDateActual, time] = startDate.split("T");
     resetGig(name, { url });
-    setDate(startDateActual);
-    setTime(time);
+    setGigDetails("gigStartDate", startDateActual);
+    setGigDetails("gigStartTime", time);
     offers.forEach((x) => addPrice(x.price));
   }
 }
+
+// Listener for when a context menu item is clicked
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId === "addAct") {
+    addAct(info.selectionText);
+  } else if (info.menuItemId === "addPrice") {
+    addPrice(info.selectionText);
+  } else if (info.menuItemId === "addDescription") {
+    const description = info.selectionText.substring(0, 500);
+    setGigDetails("internalDescription", description);
+  } else {
+    setGigDetails(info.menuItemId, info.selectionText);
+  }
+});
+
 // Create the context menu when the extension is installed
 chrome.runtime.onInstalled.addListener(() => {
   updateContextMenu();
@@ -179,9 +154,11 @@ chrome.runtime.onInstalled.addListener(() => {
 function getSelectedContent() {
   return window.getSelection().toString();
 }
+
 function querySelector(query) {
   return document.querySelector(query).innerText;
 }
+
 function applyWithQuerySelector(selector, callback) {
   chrome.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
     chrome.scripting
@@ -195,6 +172,7 @@ function applyWithQuerySelector(selector, callback) {
       });
   });
 }
+
 function applyWithSelection(callback) {
   chrome.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
     chrome.scripting
@@ -209,8 +187,7 @@ function applyWithSelection(callback) {
   });
 }
 
-//keyboard shortcuts
-
+// Keyboard shortcuts
 chrome.commands.onCommand.addListener(function (command) {
   console.log(command);
   if (command === "add-new-gig") {
@@ -220,11 +197,9 @@ chrome.commands.onCommand.addListener(function (command) {
   } else if (command === "add-price") {
     applyWithSelection(addPrice);
   } else if (command === "set-date") {
-    applyWithSelection(setDate);
+    applyWithSelection((text) => setGigDetails("gigStartDate", text));
   } else if (command === "set-time") {
-    applyWithSelection(setTime);
-  } else if (command === "set-venue") {
-    applyWithSelection(setVenue);
+    applyWithSelection((text) => setGigDetails("gigStartTime", text));
   } else if (command === "grab-known-style-1") {
     applyWithQuerySelector("[role=main]", grabKnownStyle1);
   } else if (command === "grab-known-style-2") {
